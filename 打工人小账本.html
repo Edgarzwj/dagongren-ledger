@@ -1,0 +1,851 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#8FD9BE">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="format-detection" content="telephone=no">
+<title>打工人小账本</title>
+<style>
+  :root{
+    --cream:#FBF7EE;
+    --cream-2:#F4EEDF;
+    --card:#FFFFFF;
+    --mint:#8FD9BE;
+    --mint-soft:#DCF3EA;
+    --mint-deep:#3FA98A;
+    --ink:#4A4742;
+    --ink-soft:#9A958B;
+    --pink:#F6C9C9;
+    --pink-deep:#E58A8A;
+    --red:#E57373;
+    --green:#5BB98C;
+    --yellow:#F4E2A1;
+    --line:#ECE4D4;
+    --shadow:0 6px 18px rgba(120,110,90,.10);
+    --radius:18px;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"PingFang SC","Microsoft YaHei",sans-serif;
+    background:var(--cream);
+    color:var(--ink);
+    font-size:16px;
+    line-height:1.5;
+    -webkit-text-size-adjust:100%;
+    text-size-adjust:100%;
+  }
+  button{font-family:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent;user-select:none;}
+  input,select,button,a{touch-action:manipulation;}
+  input,select{font-family:inherit;font-size:16px;}
+
+  /* ---------- 导航 ---------- */
+  .nav{
+    position:fixed;left:0;top:0;width:230px;height:100vh;
+    background:linear-gradient(180deg,var(--mint-soft),#fff);
+    border-right:2px dashed var(--line);
+    display:flex;flex-direction:column;
+    padding:22px 14px;z-index:30;
+  }
+  .brand{display:flex;align-items:center;gap:10px;padding:6px 8px 18px;}
+  .brand .pig{width:46px;height:46px;flex:0 0 auto;}
+  .brand h1{font-size:19px;margin:0;color:var(--mint-deep);letter-spacing:.5px;}
+  .brand small{display:block;font-size:11px;color:var(--ink-soft);font-weight:400;}
+  .nav-btn{
+    display:flex;align-items:center;gap:12px;width:100%;
+    border:none;background:transparent;color:var(--ink);
+    padding:14px 14px;margin:4px 0;border-radius:14px;
+    font-size:16px;text-align:left;min-height:48px;transition:.15s;
+  }
+  .nav-btn svg{width:22px;height:22px;flex:0 0 auto;}
+  .nav-btn:hover{background:var(--mint-soft);}
+  .nav-btn.active{background:var(--mint);color:#fff;font-weight:600;box-shadow:var(--shadow);}
+  .nav-foot{margin-top:auto;font-size:11px;color:var(--ink-soft);padding:10px 8px;line-height:1.6;}
+
+  .main{margin-left:230px;padding:24px 28px 60px;max-width:1080px;}
+
+  /* ---------- 通用卡片 ---------- */
+  .card{
+    background:var(--card);border:2px dashed var(--line);
+    border-radius:var(--radius);padding:18px 18px;box-shadow:var(--shadow);
+    margin-bottom:18px;
+  }
+  .card h2{font-size:17px;margin:0 0 14px;display:flex;align-items:center;gap:8px;color:var(--mint-deep);}
+  .card h2 svg{width:20px;height:20px;}
+  .row{display:flex;gap:14px;flex-wrap:wrap;}
+  .col{flex:1 1 220px;}
+  .grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;}
+
+  /* ---------- 今天要处理 ---------- */
+  .today{
+    background:linear-gradient(135deg,#FFF7E8,#FDEFE0);
+    border:2px solid #F6D9A8;border-radius:var(--radius);
+    padding:16px 18px;margin-bottom:18px;box-shadow:var(--shadow);
+  }
+  .today h2{margin:0 0 10px;color:#C98A2E;display:flex;align-items:center;gap:8px;}
+  .task{
+    display:flex;align-items:center;gap:12px;background:#fff;
+    border-radius:12px;padding:10px 12px;margin:8px 0;border:1px solid #F1E2C4;
+  }
+  .task .dot{width:10px;height:10px;border-radius:50%;flex:0 0 auto;}
+  .task.overdue .dot{background:var(--red);}
+  .task.soon .dot{background:var(--yellow);}
+  .task.info .dot{background:var(--mint);}
+  .task .txt{flex:1;font-size:14px;}
+  .task .txt b{color:var(--red);}
+  .task button{
+    border:none;background:var(--mint);color:#fff;border-radius:10px;
+    padding:8px 14px;min-height:40px;font-size:14px;white-space:nowrap;
+  }
+  .task button.ghost{background:#fff;color:var(--mint-deep);border:1px solid var(--mint);}
+
+  /* ---------- 头部概览 ---------- */
+  .hero{display:flex;align-items:center;gap:16px;margin-bottom:18px;}
+  .hero .pig-big{width:84px;height:84px;flex:0 0 auto;}
+  .hero .hl{font-size:13px;color:var(--ink-soft);}
+  .hero .hv{font-size:26px;font-weight:700;color:var(--mint-deep);}
+  .mini{display:flex;gap:10px;flex-wrap:wrap;}
+  .stat{background:var(--card);border:2px dashed var(--line);border-radius:14px;padding:12px 14px;flex:1 1 140px;}
+  .stat .l{font-size:12px;color:var(--ink-soft);}
+  .stat .v{font-size:20px;font-weight:700;margin-top:2px;}
+  .stat .v.red{color:var(--red);}
+  .stat .v.green{color:var(--green);}
+
+  .demo-flag{display:inline-block;font-size:11px;color:#C98A2E;background:#FBEBCB;border:1px solid #F2D79A;border-radius:20px;padding:2px 10px;margin-left:8px;vertical-align:middle;}
+
+  /* ---------- 表单 ---------- */
+  label.fld{display:block;margin-bottom:12px;}
+  label.fld span{display:block;font-size:13px;color:var(--ink-soft);margin-bottom:5px;}
+  .inp,.sel{
+    width:100%;border:2px solid var(--line);border-radius:12px;
+    padding:11px 12px;background:#fff;color:var(--ink);min-height:46px;
+  }
+  .inp:focus,.sel:focus{outline:none;border-color:var(--mint);}
+  .seg{display:flex;gap:8px;}
+  .seg button{flex:1;border:2px solid var(--line);background:#fff;border-radius:12px;padding:11px;min-height:46px;font-size:15px;color:var(--ink);}
+  .seg button.on-ex{background:var(--green);color:#fff;border-color:var(--green);font-weight:600;}
+  .seg button.on-in{background:var(--mint-deep);color:#fff;border-color:var(--mint-deep);font-weight:600;}
+  .btn{
+    border:none;background:var(--mint-deep);color:#fff;border-radius:14px;
+    padding:13px 18px;min-height:48px;font-size:16px;font-weight:600;width:100%;
+    box-shadow:var(--shadow);
+  }
+  .btn.mint{background:var(--mint);}
+  .btn.pink{background:var(--pink-deep);}
+  .btn.ghost{background:#fff;color:var(--mint-deep);border:2px solid var(--mint);}
+  .btn.soft{background:var(--mint-soft);color:var(--mint-deep);}
+  .btn-row{display:flex;gap:10px;flex-wrap:wrap;}
+  .btn-row .btn{width:auto;flex:1 1 140px;}
+
+  .hint{font-size:13px;color:var(--ink-soft);margin-top:6px;}
+  .work-conv{
+    margin-top:14px;background:var(--mint-soft);border-radius:14px;
+    padding:14px;text-align:center;font-size:15px;color:var(--mint-deep);
+    animation:pop .3s ease;
+  }
+  .work-conv b{font-size:22px;display:block;margin-top:4px;}
+  @keyframes pop{from{transform:scale(.9);opacity:0}to{transform:scale(1);opacity:1}}
+
+  /* ---------- 列表 ---------- */
+  .rec{display:flex;align-items:center;gap:12px;padding:11px 4px;border-bottom:1px dashed var(--line);}
+  .rec:last-child{border-bottom:none;}
+  .rec .ic{width:38px;height:38px;border-radius:11px;background:var(--mint-soft);display:flex;align-items:center;justify-content:center;flex:0 0 auto;}
+  .rec .ic svg{width:20px;height:20px;color:var(--mint-deep);}
+  .rec .mid{flex:1;min-width:0;}
+  .rec .mid .t{font-size:15px;font-weight:600;}
+  .rec .mid .s{font-size:12px;color:var(--ink-soft);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .rec .amt{font-weight:700;font-size:16px;white-space:nowrap;}
+  .rec .amt.ex{color:var(--red);}
+  .rec .amt.in{color:var(--green);}
+  .rec .del{border:none;background:#fff;color:var(--red);border:1px solid #F3C9C9;border-radius:10px;padding:6px 10px;min-height:38px;font-size:13px;}
+
+  .pill{display:inline-block;font-size:11px;background:var(--mint-soft);color:var(--mint-deep);border-radius:20px;padding:2px 9px;margin-right:6px;}
+
+  /* 进度条 */
+  .bar{height:14px;background:var(--cream-2);border-radius:20px;overflow:hidden;margin-top:8px;}
+  .bar > i{display:block;height:100%;background:linear-gradient(90deg,var(--mint),var(--mint-deep));border-radius:20px;}
+  .bar.yellow > i{background:linear-gradient(90deg,#F6E7A8,#E9C95F);}
+
+  /* 公式 */
+  .formula{background:var(--cream);border-radius:12px;padding:14px;font-size:14px;line-height:1.9;}
+  .formula .k{color:var(--ink-soft);}
+  .formula .num{color:var(--mint-deep);font-weight:700;}
+  .formula .big{font-size:20px;font-weight:700;color:var(--mint-deep);margin-top:8px;display:block;}
+
+  .scn{background:var(--cream);border-radius:14px;padding:14px;margin-bottom:12px;}
+  .scn .top{display:flex;justify-content:space-between;align-items:center;gap:8px;}
+  .scn .top b{font-size:15px;color:var(--mint-deep);display:inline-flex;align-items:center;gap:7px;}
+  .scn-ic{width:19px;height:19px;flex:0 0 auto;}
+  .scn .res{font-size:14px;margin-top:8px;}
+  .scn .res .g{color:var(--green);font-weight:700;}
+  .scn .res .r{color:var(--red);font-weight:700;}
+  input[type=range]{width:100%;accent-color:var(--mint-deep);height:30px;}
+
+  .banner{background:#FFF3D6;border:1px solid #F2D79A;color:#9A6B1E;border-radius:12px;padding:10px 14px;font-size:14px;margin-bottom:14px;}
+
+  .hidden{display:none !important;}
+  .sec-title{font-size:13px;color:var(--ink-soft);margin:4px 0 10px;font-weight:600;letter-spacing:.5px;}
+
+  /* ---------- 移动端底部Tab ---------- */
+  @media (max-width:880px){
+    .nav{
+      top:auto;bottom:0;left:0;width:100%;height:auto;
+      flex-direction:row;padding:6px 4px;
+      border-right:none;border-top:2px dashed var(--line);
+      background:linear-gradient(0deg,var(--mint-soft),#fff);
+      padding-bottom:calc(6px + env(safe-area-inset-bottom));
+    }
+    .brand,.nav-foot{display:none;}
+    .nav-btn{flex:1;flex-direction:column;gap:3px;padding:8px 4px;margin:0;font-size:11px;border-radius:12px;justify-content:center;}
+    .nav-btn svg{width:24px;height:24px;}
+    .main{margin-left:0;padding:18px 16px calc(86px + env(safe-area-inset-bottom));}
+    .hero .pig-big{width:64px;height:64px;}
+    .hero .hv{font-size:22px;}
+  }
+</style>
+</head>
+<body>
+
+<!-- ============ 导航 ============ -->
+<aside class="nav">
+  <div class="brand">
+    <svg class="pig" viewBox="0 0 64 64" fill="none">
+      <ellipse cx="32" cy="36" rx="24" ry="20" fill="#8FD9BE"/>
+      <path d="M10 30c-5-2-8 1-7 6 1 4 5 4 7 2z" fill="#8FD9BE"/>
+      <path d="M52 28c5-2 8 1 7 6-1 4-5 4-7 2z" fill="#8FD9BE"/>
+      <ellipse cx="46" cy="40" rx="7" ry="9" fill="#F6C9C9"/>
+      <circle cx="44" cy="38" r="1.6" fill="#4A4742"/>
+      <circle cx="48" cy="38" r="1.6" fill="#4A4742"/>
+      <path d="M40 44c2 2 6 2 8 0" stroke="#E58A8A" stroke-width="1.6" stroke-linecap="round"/>
+      <rect x="28" y="18" width="8" height="3" rx="1.5" fill="#4A4742"/>
+      <ellipse cx="14" cy="50" rx="3" ry="4" fill="#6FCF97"/>
+      <ellipse cx="40" cy="52" rx="3" ry="4" fill="#6FCF97"/>
+      <ellipse cx="22" cy="16" rx="6" ry="5" fill="#6FCF97"/>
+      <circle cx="58" cy="30" r="5" fill="#F4E2A1" stroke="#E9C95F" stroke-width="1.2"/>
+    </svg>
+    <div>
+      <h1>打工人小账本</h1>
+      <small>离线 · 本地保存</small>
+    </div>
+  </div>
+  <button class="nav-btn active" data-tab="home" onclick="switchTab('home')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg>首页
+  </button>
+  <button class="nav-btn" data-tab="book" onclick="switchTab('book')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 4h11a2 2 0 012 2v14H7a2 2 0 01-2-2z"/><path d="M5 4v16"/><path d="M9 8h6M9 12h6"/></svg>记账
+  </button>
+  <button class="nav-btn" data-tab="hourly" onclick="switchTab('hourly')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="8"/><path d="M12 8v4l3 2"/></svg>时薪
+  </button>
+  <button class="nav-btn" data-tab="data" onclick="switchTab('data')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="6" rx="8" ry="3"/><path d="M4 6v12c0 1.7 3.6 3 8 3s8-1.3 8-3V6"/><path d="M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/></svg>数据
+  </button>
+  <div class="nav-foot">数据仅存于本机浏览器<br>记得常备份～</div>
+</aside>
+
+<!-- ============ 主体 ============ -->
+<main>
+  <!-- ===== 首页 ===== -->
+  <section id="home">
+    <div class="today">
+      <h2>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l9 16H3z"/><path d="M12 10v4M12 17h.01"/></svg>
+        今天要处理
+      </h2>
+      <div id="todayList"></div>
+    </div>
+
+    <div id="banner30" class="banner hidden">数据已积累 30 条，建议导出备份以防丢失 💾</div>
+
+    <div class="hero">
+      <svg class="pig-big" viewBox="0 0 64 64" fill="none">
+        <ellipse cx="32" cy="36" rx="24" ry="20" fill="#8FD9BE"/>
+        <ellipse cx="46" cy="40" rx="7" ry="9" fill="#F6C9C9"/>
+        <circle cx="44" cy="38" r="1.6" fill="#4A4742"/><circle cx="48" cy="38" r="1.6" fill="#4A4742"/>
+        <path d="M40 44c2 2 6 2 8 0" stroke="#E58A8A" stroke-width="1.6" stroke-linecap="round"/>
+        <rect x="28" y="18" width="8" height="3" rx="1.5" fill="#4A4742"/>
+        <ellipse cx="14" cy="50" rx="3" ry="4" fill="#6FCF97"/><ellipse cx="40" cy="52" rx="3" ry="4" fill="#6FCF97"/>
+        <ellipse cx="22" cy="16" rx="6" ry="5" fill="#6FCF97"/>
+        <circle cx="58" cy="30" r="5" fill="#F4E2A1" stroke="#E9C95F" stroke-width="1.2"/>
+      </svg>
+      <div style="flex:1">
+        <div class="hl">本月净结余</div>
+        <div class="hv" id="netMonth">¥0</div>
+      </div>
+    </div>
+
+    <div class="grid2">
+      <div class="stat"><div class="l">本月收入</div><div class="v green" id="incMonth">¥0</div></div>
+      <div class="stat"><div class="l">本月固定支出</div><div class="v red" id="fixMonth">¥0</div></div>
+      <div class="stat"><div class="l">本月弹性支出</div><div class="v red" id="flexMonth">¥0</div></div>
+      <div class="stat"><div class="l">真实时薪</div><div class="v" id="hwHome">¥0</div></div>
+    </div>
+
+    <div class="card">
+      <h2>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="M7 14l4-5 3 3 5-7"/></svg>
+        存款曲线
+        <span class="demo-flag" id="curveDemo"></span>
+      </h2>
+      <div id="curve"></div>
+      <div class="hint" id="curveNote"></div>
+    </div>
+
+    <div class="card">
+      <h2>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3 7h7l-6 4 2 8-6-4-6 4 2-8-6-4h7z"/></svg>
+        最近记录
+      </h2>
+      <div id="recent4"></div>
+      <div class="btn-row" style="margin-top:12px">
+        <button class="btn soft" onclick="switchTab('book')">去记账 →</button>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col card">
+        <h2>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
+          自由基金目标
+        </h2>
+        <div class="hl" id="freeTxt"></div>
+        <div class="bar"><i id="freeBar" style="width:0%"></i></div>
+      </div>
+      <div class="col card">
+        <h2>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l8 4v5c0 5-4 8-8 9-4-1-8-4-8-9V7z"/></svg>
+          安全垫
+        </h2>
+        <div class="hl" id="safeTxt"></div>
+        <div class="bar yellow"><i id="safeBar" style="width:0%"></i></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== 记账 ===== -->
+  <section id="book" class="hidden">
+    <div class="card">
+      <h2>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+        10 秒记账
+      </h2>
+      <div class="seg" id="typeSeg">
+        <button class="on-ex" data-t="expense" onclick="setType('expense')">支出</button>
+        <button data-t="income" onclick="setType('income')">收入</button>
+      </div>
+      <label class="fld" style="margin-top:12px"><span>金额（¥）</span>
+        <input class="inp" id="amt" type="number" inputmode="decimal" placeholder="0.00" min="0" step="0.01">
+      </label>
+      <label class="fld"><span>分类</span>
+        <select class="sel" id="cat"></select>
+      </label>
+      <label class="fld"><span>备注（可选）</span>
+        <input class="inp" id="note" type="text" placeholder="例如：午饭 / 地铁">
+      </label>
+      <label class="fld"><span>日期</span>
+        <input class="inp" id="rdate" type="date">
+      </label>
+      <button class="btn" onclick="saveRecord()">保存并换算工作时间</button>
+      <div id="workConv"></div>
+    </div>
+
+    <div class="card">
+      <h2>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h10"/></svg>
+        全部记录
+        <span class="demo-flag" id="recDemo"></span>
+      </h2>
+      <div class="row">
+        <div class="col">
+          <label class="fld"><span>筛选月份</span><input class="inp" id="filterMonth" type="month" onchange="renderRecords()"></label>
+        </div>
+        <div class="col">
+          <label class="fld"><span>类型</span>
+            <select class="sel" id="filterType" onchange="renderRecords()">
+              <option value="all">全部</option><option value="expense">支出</option><option value="income">收入</option>
+            </select>
+          </label>
+        </div>
+      </div>
+      <div id="recList"></div>
+    </div>
+
+    <div class="card">
+      <h2>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7h18M3 12h18M3 17h12"/></svg>
+        月度固定支出（账单）
+      </h2>
+      <div class="hint">固定支出每月自动计入「本月固定支出」，临近付款日会在首页提醒。</div>
+      <div id="fixedList"></div>
+      <div class="row" style="margin-top:12px">
+        <div class="col"><input class="inp" id="fxName" type="text" placeholder="名称，如 房租"></div>
+        <div class="col"><input class="inp" id="fxAmt" type="number" inputmode="decimal" placeholder="金额 ¥" min="0" step="0.01"></div>
+        <div class="col"><input class="inp" id="fxDay" type="number" placeholder="付款日(1-28)" min="1" max="28"></div>
+      </div>
+      <button class="btn mint" style="margin-top:10px" onclick="addFixed()">添加固定支出</button>
+    </div>
+  </section>
+
+  <!-- ===== 时薪 ===== -->
+  <section id="hourly" class="hidden">
+    <div class="card">
+      <h2>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="8"/><path d="M12 8v4l3 2"/></svg>
+        真实时薪计算器
+      </h2>
+      <div class="row">
+        <div class="col"><label class="fld"><span>到手月薪（¥）</span><input class="inp" id="s_salary" type="number" min="0"></label></div>
+        <div class="col"><label class="fld"><span>发薪月数</span><input class="inp" id="s_pay" type="number" min="0" step="1"></label></div>
+      </div>
+      <div class="row">
+        <div class="col"><label class="fld"><span>每月工作成本（¥）</span><input class="inp" id="s_cost" type="number" min="0"></label></div>
+        <div class="col"><label class="fld"><span>每月工作天数</span><input class="inp" id="s_days" type="number" min="0" step="1"></label></div>
+      </div>
+      <div class="row">
+        <div class="col"><label class="fld"><span>每天在场时间（小时）</span><input class="inp" id="s_site" type="number" min="0" step="0.5"></label></div>
+        <div class="col"><label class="fld"><span>每天通勤（分钟，往返）</span><input class="inp" id="s_comm" type="number" min="0" step="5"></label></div>
+        <div class="col"><label class="fld"><span>每天加班（小时）</span><input class="inp" id="s_ot" type="number" min="0" step="0.5"></label></div>
+      </div>
+      <button class="btn" onclick="saveSettings()">保存设置</button>
+
+      <div class="formula" id="formulaBox" style="margin-top:16px"></div>
+    </div>
+
+    <div class="card">
+      <h2>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="M7 14l4-5 3 3 5-7"/></svg>
+        情景模拟：通勤 / 加班 / 涨薪
+      </h2>
+
+      <div class="scn">
+        <div class="top"><b><svg class="scn-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="3" width="14" height="14" rx="3"/><path d="M5 11h14M9 17l-2 4M15 17l2 4"/><circle cx="9" cy="14" r="1"/><circle cx="15" cy="14" r="1"/></svg>通勤优化</b><span class="hint" id="sc1v"></span></div>
+        <input type="range" id="sc1" min="-60" max="0" step="5" value="-30" oninput="sim()">
+        <div class="res" id="sc1r"></div>
+      </div>
+
+      <div class="scn">
+        <div class="top"><b><svg class="scn-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="8"/><path d="M12 8v4l3 2"/></svg>减少加班</b><span class="hint" id="sc2v"></span></div>
+        <input type="range" id="sc2" min="-3" max="0" step="0.5" value="-1" oninput="sim()">
+        <div class="res" id="sc2r"></div>
+      </div>
+
+      <div class="scn">
+        <div class="top"><b><svg class="scn-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 17l6-6 4 4 7-7"/><path d="M14 8h7v7"/></svg>涨薪</b><span class="hint" id="sc3v"></span></div>
+        <input type="range" id="sc3" min="0" max="30" step="1" value="10" oninput="sim()">
+        <div class="res" id="sc3r"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== 数据 ===== -->
+  <section id="data" class="hidden">
+    <div class="card">
+      <h2>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12M8 11l4 4 4-4"/><path d="M4 21h16"/></svg>
+        数据备份与清理
+      </h2>
+      <div class="btn-row">
+        <button class="btn mint" onclick="exportJSON()">导出 JSON 备份</button>
+        <button class="btn soft" onclick="document.getElementById('imp').click()">导入恢复</button>
+        <button class="btn ghost" onclick="exportCSV()">导出 CSV</button>
+      </div>
+      <input type="file" id="imp" accept="application/json,.json" class="hidden" onchange="importJSON(event)">
+      <div class="btn-row" style="margin-top:14px">
+        <button class="btn pink" onclick="clearDemo()">安全清理示例数据</button>
+        <button class="btn ghost" onclick="clearAll()">清空全部数据</button>
+      </div>
+      <div class="hint">提示：导入会覆盖当前数据，建议先导出备份。示例数据已用标记区分，可单独清理。</div>
+    </div>
+
+    <div class="card">
+      <h2>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg>
+        自由基金 & 安全垫设置
+      </h2>
+      <div class="row">
+        <div class="col"><label class="fld"><span>自由基金目标（¥）</span><input class="inp" id="f_target" type="number" min="0"></label></div>
+        <div class="col"><label class="fld"><span>当前已攒（¥）</span><input class="inp" id="f_cur" type="number" min="0"></label></div>
+        <div class="col"><label class="fld"><span>安全垫月数</span><input class="inp" id="f_safe" type="number" min="0" step="1"></label></div>
+      </div>
+      <button class="btn" onclick="saveFreedom()">保存</button>
+    </div>
+  </section>
+</main>
+
+<script>
+/* ===================== 工具 ===================== */
+const PREFIX="wb_ledger_";
+const $=id=>document.getElementById(id);
+const fmtYM=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+const fmtDate=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+const money=n=>'¥'+Number(n||0).toLocaleString('zh-CN',{minimumFractionDigits:0,maximumFractionDigits:2});
+function load(k,def){try{const v=localStorage.getItem(PREFIX+k);return v?JSON.parse(v):def;}catch(e){return def;}}
+function save(k,v){localStorage.setItem(PREFIX+k,JSON.stringify(v));}
+
+/* 分类图标集 */
+const ICONS={
+  '工资':'<path d="M3 8l9-5 9 5v8l-9 5-9-5z"/><path d="M3 8l9 5 9-5M12 13v8"/>',
+  '奖金':'<circle cx="12" cy="9" r="6"/><path d="M9 14l-2 7 5-3 5 3-2-7"/>',
+  '兼职':'<path d="M4 7h16v12H4z"/><path d="M8 7V5h8v2M9 11h6"/>',
+  '其他收入':'<path d="M12 3v18M5 10l7-7 7 7"/>',
+  '餐饮':'<path d="M6 3v8M9 3v8M7.5 11v10M16 3c-2 0-3 2-3 5s1 4 3 4v9"/>',
+  '交通':'<circle cx="6" cy="17" r="3"/><circle cx="18" cy="17" r="3"/><path d="M9 17h6M6 17l3-9h6l3 9"/>',
+  '购物':'<path d="M6 7h12l-1 13H7z"/><path d="M9 7a3 3 0 016 0"/>',
+  '房租':'<path d="M4 11l8-6 8 6M6 10v9h12v-9"/><path d="M10 19v-5h4v5"/>',
+  '娱乐':'<circle cx="12" cy="12" r="8"/><path d="M9 9l6 3-6 3z" fill="currentColor" stroke="none"/>',
+  '医疗':'<path d="M12 5v14M5 12h14"/><circle cx="12" cy="12" r="9"/>',
+  '教育':'<path d="M3 9l9-5 9 5-9 5z"/><path d="M7 11v5c0 1 2 2 5 2s5-1 5-2v-5"/>',
+  '其他':'<circle cx="12" cy="12" r="8"/><path d="M12 8v4M12 15h.01"/>'
+};
+const CAT_ICON=k=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">${ICONS[k]||ICONS['其他']}</svg>`;
+const EX_CATS=['餐饮','交通','购物','房租','娱乐','医疗','教育','其他'];
+const IN_CATS=['工资','奖金','兼职','其他收入'];
+
+/* ===================== 状态 ===================== */
+let S={records:[],fixed:[],settings:null,freedom:null,seeded:false};
+function loadAll(){
+  S.records=load('records',[]);
+  S.fixed=load('fixed',[]);
+  S.settings=load('settings',null);
+  S.freedom=load('freedom',null);
+  S.seeded=load('seeded',false);
+  if(!S.seeded) seedDemo();
+}
+function persist(){save('records',S.records);save('fixed',S.fixed);save('settings',S.settings);save('freedom',S.freedom);save('seeded',S.seeded);}
+
+/* ===================== 演示数据 ===================== */
+function seedDemo(){
+  const now=new Date();
+  const settings={salary:12000,payMonths:12,workCost:1500,workdays:22,onSite:9,commute:60,overtime:1};
+  const mk=(date,type,cat,amt,note)=>({id:'d'+Math.random().toString(36).slice(2,9),date,type,cat,amount:amt,note:note||'',isDemo:true,work:type==='expense'?Math.round(amt/hourlyOf(settings)*60):0});
+  const recs=[];
+  // 过去3个完整月 + 本月部分（≤今天）
+  for(let i=3;i>=1;i--){
+    const d=new Date(now.getFullYear(),now.getMonth()-i,1);
+    const ym=d.getFullYear(), mo=d.getMonth();
+    recs.push(mk(fmtDate(new Date(ym,mo,10)),'income','工资',12000,'月薪'));
+    recs.push(mk(fmtDate(new Date(ym,mo,5)),'expense','餐饮',75,'午饭'));
+    recs.push(mk(fmtDate(new Date(ym,mo,15)),'expense','餐饮',90,'聚餐'));
+    recs.push(mk(fmtDate(new Date(ym,mo,8)),'expense','交通',200,'地铁月票'));
+    recs.push(mk(fmtDate(new Date(ym,mo,18)),'expense','购物',400,'衣服'));
+    recs.push(mk(fmtDate(new Date(ym,mo,22)),'expense','娱乐',300,'电影'));
+  }
+  const cm=now.getMonth(), cy=now.getFullYear(), td=now.getDate();
+  const addIf=(day,type,cat,amt,note)=>{if(day<=td) recs.push(mk(fmtDate(new Date(cy,cm,day)),type,cat,amt,note));};
+  addIf(1,'expense','餐饮',65,'早餐月');
+  addIf(2,'expense','医疗',120,'感冒药');
+  addIf(3,'expense','交通',30,'打车');
+  addIf(5,'expense','购物',200,'日用品');
+  S.records=recs;
+  S.fixed=[
+    {id:'f1',name:'房租',amount:2500,dueDay:1,lastPaid:'',isDemo:true},
+    {id:'f2',name:'水电燃气',amount:200,dueDay:10,lastPaid:'',isDemo:true},
+    {id:'f3',name:'保险',amount:300,dueDay:15,lastPaid:'',isDemo:true},
+    {id:'f4',name:'宽带网费',amount:100,dueDay:20,lastPaid:'',isDemo:true}
+  ];
+  const fixedTotal=S.fixed.reduce((a,b)=>a+b.amount,0);
+  S.settings=settings;
+  S.freedom={target:50000,current:8000,safetyMonths:6};
+  S.seeded=true;
+  persist();
+}
+
+/* ===================== 时薪计算 ===================== */
+function hourlyOf(s){
+  const annualTake=s.salary*s.payMonths;
+  const annualCost=s.workCost*12;
+  const annualNet=annualTake-annualCost;
+  const days=s.workdays*12;
+  const hours=(s.onSite+s.overtime)*days;
+  const commuteMin=s.commute*days;
+  const totalHours=hours+commuteMin/60;
+  return totalHours>0?annualNet/totalHours:0;
+}
+function realHourly(){return hourlyOf(S.settings||{salary:0,payMonths:12,workCost:0,workdays:22,onSite:9,commute:60,overtime:1});}
+
+/* ===================== 渲染：导航 ===================== */
+function switchTab(t){
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.toggle('active',b.dataset.tab===t));
+  ['home','book','hourly','data'].forEach(s=>$(s).classList.toggle('hidden',s!==t));
+  if(t==='home')renderHome();
+  if(t==='book'){fillCat();renderRecords();renderFixed();}
+  if(t==='hourly'){fillSettings();renderFormula();sim();}
+  if(t==='data')fillFreedom();
+}
+
+/* ===================== 渲染：首页 ===================== */
+function renderHome(){
+  const now=new Date(), ym=fmtYM(now);
+  const recMonth=S.records.filter(r=>r.date.startsWith(ym));
+  const inc=recMonth.filter(r=>r.type==='income').reduce((a,b)=>a+b.amount,0);
+  const flex=recMonth.filter(r=>r.type==='expense').reduce((a,b)=>a+b.amount,0);
+  const fix=S.fixed.reduce((a,b)=>a+b.amount,0);
+  const net=inc-flex-fix;
+  $('incMonth').textContent=money(inc);
+  $('flexMonth').textContent=money(flex);
+  $('fixMonth').textContent=money(fix);
+  $('netMonth').textContent=(net>=0?'+':'')+money(net);
+  $('hwHome').textContent=money(realHourly());
+
+  renderToday();
+  renderRecent();
+  renderCurve();
+  renderFreedom();
+  $('banner30').classList.toggle('hidden',S.records.length<30);
+
+  const hasDemo=S.records.some(r=>r.isDemo)||S.fixed.some(f=>f.isDemo);
+  $('curveDemo').textContent=hasDemo?'示例数据':'';
+  $('recDemo').textContent=hasDemo?'示例数据':'';
+}
+
+function renderToday(){
+  const now=new Date(), ym=fmtYM(now), day=now.getDate();
+  const items=[];
+  S.fixed.forEach(f=>{
+    if(f.lastPaid===ym) return;
+    if(f.dueDay<day) items.push({cls:'overdue',txt:`<b>逾期</b>：${f.name} ${money(f.amount)} 应于每月${f.dueDay}日支付，点此标记本月已付`,id:f.id});
+    else if(f.dueDay-day<=5) items.push({cls:'soon',txt:`临近：${f.name} ${money(f.amount)} 将于${f.dueDay}日到期`,id:f.id});
+  });
+  const recToday=S.records.some(r=>r.date===fmtDate(now));
+  if(!recToday) items.push({cls:'info',txt:'今天还没记账，记一笔看看值多少工作时间吧~',act:'book'});
+  const box=$('todayList');
+  if(!items.length){box.innerHTML='<div class="hint">🎉 今天没有待处理事项，轻松一下！</div>';return;}
+  box.innerHTML=items.map((it,i)=>{
+    const btn=it.act?`<button class="ghost" onclick="switchTab('${it.act}')">去记账</button>`:`<button onclick="markPaid('${it.id}')">标记已付</button>`;
+    return `<div class="task ${it.cls}"><span class="dot"></span><span class="txt">${it.txt}</span>${btn}</div>`;
+  }).join('');
+}
+function markPaid(id){
+  const f=S.fixed.find(x=>x.id===id);if(!f)return;
+  f.lastPaid=fmtYM(new Date());persist();renderHome();
+}
+
+function renderRecent(){
+  const list=[...S.records].sort((a,b)=>b.date.localeCompare(a.date)).slice(0,4);
+  $('recent4').innerHTML=list.length?list.map(r=>recRow(r)).join(''):'<div class="hint">还没有记录，去记一笔吧。</div>';
+}
+function recRow(r){
+  const sign=r.type==='income'?'+':'-';
+  const w=r.type==='expense'&&r.work?`<span class="pill">⏱ ${r.work} 分钟</span>`:'';
+  return `<div class="rec">
+    <div class="ic">${CAT_ICON(r.cat)}</div>
+    <div class="mid"><div class="t">${r.cat}</div><div class="s">${r.date} · ${r.note||'—'} ${w}</div></div>
+    <div class="amt ${r.type==='income'?'in':'ex'}">${sign}${money(r.amount)}</div>
+    <button class="del" onclick="delRec('${r.id}')">删</button>
+  </div>`;
+}
+function delRec(id){S.records=S.records.filter(r=>r.id!==id);persist();renderHome();renderRecords();}
+
+/* 存款曲线（原生SVG） */
+function renderCurve(){
+  const now=new Date();
+  const months=[];
+  for(let i=5;i>=0;i--){const d=new Date(now.getFullYear(),now.getMonth()-i,1);months.push(fmtYM(d));}
+  let cum=0;const pts=[];
+  months.forEach(ym=>{
+    const mrec=S.records.filter(r=>r.date.startsWith(ym));
+    const inc=mrec.filter(r=>r.type==='income').reduce((a,b)=>a+b.amount,0);
+    const flex=mrec.filter(r=>r.type==='expense').reduce((a,b)=>a+b.amount,0);
+    const fix=S.fixed.reduce((a,b)=>a+b.amount,0);
+    cum+=inc-flex-fix;pts.push(cum);
+  });
+  const W=320,H=160,pad=26;
+  const max=Math.max(...pts,1),min=Math.min(...pts,0);
+  const range=(max-min)||1;
+  const x=i=>pad+(W-2*pad)*(i/(pts.length-1||1));
+  const y=v=>H-pad-((v-min)/range)*(H-2*pad);
+  const line=pts.map((v,i)=>`${i?'L':'M'}${x(i).toFixed(1)} ${y(v).toFixed(1)}`).join(' ');
+  const area=`M${x(0).toFixed(1)} ${H-pad} `+pts.map((v,i)=>`L${x(i).toFixed(1)} ${y(v).toFixed(1)}`).join(' ')+` L${x(pts.length-1).toFixed(1)} ${H-pad} Z`;
+  const dots=pts.map((v,i)=>`<circle cx="${x(i).toFixed(1)}" cy="${y(v).toFixed(1)}" r="3" fill="#3FA98A"/>`).join('');
+  const labels=months.map((m,i)=>`<text x="${x(i).toFixed(1)}" y="${H-7}" font-size="10" font-weight="600" fill="#9A958B" text-anchor="middle">${m.slice(5)}月</text>`).join('');
+  $('curve').innerHTML=`<svg viewBox="0 0 ${W} ${H}" width="100%" style="display:block">
+    <defs><linearGradient id="g1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8FD9BE" stop-opacity=".35"/><stop offset="1" stop-color="#8FD9BE" stop-opacity="0"/></linearGradient></defs>
+    <line x1="${pad}" y1="${H-pad}" x2="${W-pad}" y2="${H-pad}" stroke="#ECE4D4"/>
+    <line x1="${pad}" y1="${pad}" x2="${pad}" y2="${H-pad}" stroke="#ECE4D4"/>
+    <path d="${area}" fill="url(#g1)"/>
+    <path d="${line}" fill="none" stroke="#3FA98A" stroke-width="2.5" stroke-linejoin="round"/>
+    ${dots}${labels}
+  </svg>`;
+  $('curveNote').textContent='累计净结余（收入 − 弹性 − 固定），最近 6 个月';
+}
+
+/* 自由基金 & 安全垫 */
+function renderFreedom(){
+  const f=S.freedom, fix=S.fixed.reduce((a,b)=>a+b.amount,0);
+  const safeTarget=fix*(f.safetyMonths||6);
+  const fp=Math.min(100,Math.round(f.current/f.target*100))||0;
+  const sp=Math.min(100,Math.round(f.current/safeTarget*100))||0;
+  $('freeTxt').textContent=`已攒 ${money(f.current)} / 目标 ${money(f.target)}（${fp}%）`;
+  $('freeBar').style.width=fp+'%';
+  $('safeTxt').textContent=`已攒 ${money(f.current)} / 安全垫 ${money(safeTarget)}（${sp}%）`;
+  $('safeBar').style.width=sp+'%';
+}
+
+/* ===================== 记账 ===================== */
+let curType='expense';
+function setType(t){
+  curType=t;
+  document.querySelectorAll('#typeSeg button').forEach(b=>b.classList.toggle('on-ex',t==='expense'&&b.dataset.t==='expense'));
+  document.querySelectorAll('#typeSeg button').forEach(b=>b.classList.toggle('on-in',t==='income'&&b.dataset.t==='income'));
+  fillCat();
+}
+function fillCat(){
+  const cats=curType==='expense'?EX_CATS:IN_CATS;
+  $('cat').innerHTML=cats.map(c=>`<option value="${c}">${c}</option>`).join('');
+}
+function saveRecord(){
+  const amt=parseFloat($('amt').value);
+  if(!amt||amt<=0){alert('请输入有效金额');return;}
+  const date=$('rdate').value||fmtDate(new Date());
+  const work=curType==='expense'?Math.round(amt/realHourly()*60):0;
+  S.records.push({id:'r'+Date.now(),date,type:curType,cat:$('cat').value,amount:amt,note:$('note').value.trim(),isDemo:false,work});
+  persist();
+  $('amt').value='';$('note').value='';
+  const conv=$('workConv');
+  if(curType==='expense'){
+    const h=Math.floor(work/60),m=work%60;
+    conv.innerHTML=`<div class="work-conv">这笔 ${money(amt)}<b>≈ 你工作 ${h} 小时 ${m} 分钟</b>换来的</div>`;
+  }else{
+    conv.innerHTML=`<div class="work-conv">收入 +${money(amt)}<b>可攒下自由基金</b></div>`;
+  }
+  renderHome();renderRecords();
+}
+function renderRecords(){
+  const fm=$('filterMonth').value, ft=$('filterType').value;
+  let list=[...S.records].sort((a,b)=>b.date.localeCompare(a.date));
+  if(fm)list=list.filter(r=>r.date.startsWith(fm));
+  if(ft!=='all')list=list.filter(r=>r.type===ft);
+  $('recList').innerHTML=list.length?list.map(r=>recRow(r)).join(''):'<div class="hint">没有匹配的记录。</div>';
+}
+function renderFixed(){
+  $('fixedList').innerHTML=S.fixed.length?S.fixed.map(f=>{
+    const paid=f.lastPaid===fmtYM(new Date());
+    return `<div class="rec"><div class="ic">${CAT_ICON('房租')}</div>
+      <div class="mid"><div class="t">${f.name} ${paid?'<span class="pill" style="background:#DCF3EA;color:#3FA98A">本月已付</span>':''}</div>
+      <div class="s">每月 ${f.dueDay} 日 · ${money(f.amount)}</div></div>
+      <button class="del" onclick="delFixed('${f.id}')">删</button></div>`;
+  }).join(''):'<div class="hint">暂无固定支出。</div>';
+}
+function addFixed(){
+  const name=$('fxName').value.trim(),amt=parseFloat($('fxAmt').value),day=parseInt($('fxDay').value);
+  if(!name||!amt||!day){alert('请填全名称/金额/付款日');return;}
+  S.fixed.push({id:'f'+Date.now(),name,amount:amt,dueDay:day,lastPaid:'',isDemo:false});
+  persist();$('fxName').value='';$('fxAmt').value='';$('fxDay').value='';
+  renderFixed();renderHome();
+}
+function delFixed(id){S.fixed=S.fixed.filter(f=>f.id!==id);persist();renderFixed();renderHome();}
+
+/* ===================== 时薪页 ===================== */
+function fillSettings(){
+  const s=S.settings;
+  $('s_salary').value=s.salary;$('s_pay').value=s.payMonths;$('s_cost').value=s.workCost;
+  $('s_days').value=s.workdays;$('s_site').value=s.onSite;$('s_comm').value=s.commute;$('s_ot').value=s.overtime;
+}
+function saveSettings(){
+  S.settings={
+    salary:+$('s_salary').value||0,payMonths:+$('s_pay').value||12,workCost:+$('s_cost').value||0,
+    workdays:+$('s_days').value||22,onSite:+$('s_site').value||0,commute:+$('s_comm').value||0,overtime:+$('s_ot').value||0
+  };
+  persist();renderFormula();renderHome();sim();
+  alert('已保存 ✓');
+}
+function renderFormula(){
+  const s=S.settings;
+  const annualTake=s.salary*s.payMonths;
+  const annualCost=s.workCost*12;
+  const annualNet=annualTake-annualCost;
+  const days=s.workdays*12;
+  const hours=(s.onSite+s.overtime)*days;
+  const commuteMin=s.commute*days;
+  const totalHours=hours+commuteMin/60;
+  const hw=hourlyOf(s);
+  $('formulaBox').innerHTML=`
+    <div><span class="k">年实际到手</span> = 月薪 <span class="num">${money(s.salary)}</span> × 发薪 <span class="num">${s.payMonths}</span> 月 = <span class="num">${money(annualTake)}</span></div>
+    <div><span class="k">年工作成本</span> = 月成本 <span class="num">${money(s.workCost)}</span> × 12 = <span class="num">${money(annualCost)}</span></div>
+    <div><span class="k">年净收入</span> = 到手 − 成本 = <span class="num">${money(annualNet)}</span></div>
+    <div><span class="k">年总耗时</span> = (在场 <span class="num">${s.onSite}</span> + 加班 <span class="num">${s.overtime}</span> 小时) × <span class="num">${days}</span> 天 + 通勤 <span class="num">${s.commute}</span> 分 × <span class="num">${days}</span> 天 = <span class="num">${Math.round(totalHours).toLocaleString()}</span> 小时</div>
+    <span class="big">真实时薪 = ${money(hw)} / 小时</span>
+    <div class="hint">时薪越低，说明通勤、加班、工作成本正在悄悄吃掉你的时间价值。</div>`;
+}
+function sim(){
+  const base=S.settings, hw0=hourlyOf(base);
+  // 1 通勤
+  const c1=+$('sc1').value;const s1={...base,commute:Math.max(0,base.commute+c1)};
+  const hw1=hourlyOf(s1);const hoursSaved1=(-c1*base.workdays*12)/60; // c1 为负，每日少通勤分钟
+  $('sc1v').textContent=`通勤 ${c1} 分钟/天`;
+  $('sc1r').innerHTML=`新时薪 <b class="g">${money(hw1)}</b>（${hw1>=hw0?'+':''}${money(hw1-hw0)}），每年多 <b class="g">${Math.round(hoursSaved1)}</b> 小时自由时间`;
+  // 2 加班
+  const c2=+$('sc2').value;const s2={...base,overtime:Math.max(0,base.overtime+c2)};
+  const hw2=hourlyOf(s2);const hoursSaved2=(-c2)*base.workdays*12;
+  $('sc2v').textContent=`加班 ${c2} 小时/天`;
+  $('sc2r').innerHTML=`新时薪 <b class="g">${money(hw2)}</b>（${hw2>=hw0?'+':''}${money(hw2-hw0)}），每年多 <b class="g">${Math.round(hoursSaved2)}</b> 小时自由时间`;
+  // 3 涨薪
+  const c3=+$('sc3').value;const s3={...base,salary:base.salary*(1+c3/100)};
+  const hw3=hourlyOf(s3);const earn3=base.salary*(c3/100)*base.payMonths;
+  $('sc3v').textContent=`涨薪 ${c3}%`;
+  $('sc3r').innerHTML=`新时薪 <b class="g">${money(hw3)}</b>（+${money(hw3-hw0)}），每年多赚 <b class="g">${money(earn3)}</b>`;
+}
+
+/* ===================== 数据页 ===================== */
+function fillFreedom(){
+  $('f_target').value=S.freedom.target;$('f_cur').value=S.freedom.current;$('f_safe').value=S.freedom.safetyMonths;
+}
+function saveFreedom(){
+  S.freedom={target:+$('f_target').value||0,current:+$('f_cur').value||0,safetyMonths:+$('f_safe').value||6};
+  persist();renderHome();alert('已保存 ✓');
+}
+function exportJSON(){
+  const data={_type:'打工人小账本备份',_v:1,exportedAt:new Date().toISOString(),records:S.records,fixed:S.fixed,settings:S.settings,freedom:S.freedom};
+  download(JSON.stringify(data,null,2),`账本备份_${fmtDate(new Date())}.json`,'application/json');
+}
+function exportCSV(){
+  const rows=[['日期','类型','分类','金额','备注','折算分钟']];
+  [...S.records].sort((a,b)=>b.date.localeCompare(a.date)).forEach(r=>rows.push([r.date,r.type==='income'?'收入':'支出',r.cat,r.amount,r.note||'',r.work||'']));
+  const csv='\uFEFF'+rows.map(r=>r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
+  download(csv,`账本记录_${fmtDate(new Date())}.csv`,'text/csv');
+}
+function download(content,name,type){
+  const blob=new Blob([content],{type});const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');a.href=url;a.download=name;a.click();URL.revokeObjectURL(url);
+}
+function importJSON(e){
+  const file=e.target.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=()=>{
+    try{
+      const d=JSON.parse(reader.result);
+      if(!d.records)throw 0;
+      if(!confirm('导入将覆盖当前所有数据，确定继续？建议先导出备份。'))return;
+      S.records=d.records||[];S.fixed=d.fixed||[];S.settings=d.settings||S.settings;S.freedom=d.freedom||S.freedom;S.seeded=true;
+      persist();switchTab('home');alert('导入成功 ✓');
+    }catch(err){alert('文件格式不正确，导入失败');}
+  };
+  reader.readAsText(file);e.target.value='';
+}
+function clearDemo(){
+  if(!confirm('仅删除标记为「示例」的数据（保留你自己记的），确定？'))return;
+  S.records=S.records.filter(r=>!r.isDemo);
+  S.fixed=S.fixed.filter(f=>!f.isDemo);
+  persist();renderHome();renderRecords();renderFixed();
+  alert('示例数据已清理 ✓');
+}
+function clearAll(){
+  if(!confirm('⚠️ 将清空全部记录、固定支出与设置，且无法恢复！确定？'))return;
+  if(!confirm('再次确认：所有数据都会删除，建议先导出备份。继续？'))return;
+  S.records=[];S.fixed=[];S.seeded=false;localStorage.removeItem(PREFIX+'seeded');
+  persist();renderHome();renderRecords();renderFixed();
+  alert('已全部清空');
+}
+
+/* ===================== 启动 ===================== */
+loadAll();
+$('rdate').value=fmtDate(new Date());
+$('filterMonth').value=fmtYM(new Date());
+switchTab('home');
+</script>
+</body>
+</html>
